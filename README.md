@@ -1,28 +1,39 @@
-NESTJS + BETTER AUTH FRAMEWORK
+# NestJS + Better Auth Framework
 
-This is an Authentication and Identity Backend Services powered by Nestjs Framework and Better Auth Framework
-with the use of postGreSQL and TypeORM
+An authentication and identity backend service built with **NestJS**, **Better Auth**, **PostgreSQL**, and **TypeORM**.
 
-used for
-* Monolithic App
-just use Rest API or HTTP to proxy this services as Authentication to your client
+Designed as a reusable authentication service that can be integrated into different application architectures through **REST APIs / HTTP**.
 
-* Multi SaaS App
-  example food delivery platform with the use of SSO
+## Use Cases
 
-* SaaS App
-* Internal Application with SuperAdmin Seeder just get run 1 command to get the uuid of the seed SuperAdmin it generates the credentials and information
+* **Monolithic Applications**
+  Use the service directly through REST APIs or HTTP as the application's authentication and identity layer.
 
-  Features
+* **Multi-Tenant / SaaS Platforms**
+  Centralize authentication across multiple applications, services, or tenants with support for **SSO**.
 
-  Email/Username And Password
-  Google Oauth
-  Two Factor
-  Magic link
-  Email OTP
-  Passkey
-  SSO
-account management
-sessions
+* **SaaS Applications**
+  Provide a dedicated authentication backend that can be reused across multiple client applications.
 
-  
+* **Internal Applications**
+  Includes a **SuperAdmin seeder** that can be executed with a single command to generate the initial SuperAdmin account and credentials.
+
+## Features
+
+* Email / Username & Password
+* Google OAuth
+* Two-Factor Authentication (2FA)
+* Magic Links
+* Email OTP
+* Passkeys
+* Single Sign-On (SSO)
+* Account Management
+* Session Management
+
+## Tech Stack
+
+* **NestJS**
+* **Better Auth**
+* **PostgreSQL**
+* **TypeORM**
+* **REST API / HTTP**
