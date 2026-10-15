@@ -1,8 +1,92 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser';
+import bodyParser from 'body-parser';
+import express from 'express';
+import { Request, Response, NextFunction } from 'express';
+import { join } from 'path';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  const configService = app.get(ConfigService);
+
+  const expressApp = app.getHttpAdapter().getInstance() as express.Express;
+  const trustedProxyHops = Number(
+    configService.get<string>('TRUST_PROXY_HOPS') ?? 0,
+  );
+  expressApp.set(
+    'trust proxy',
+    Number.isInteger(trustedProxyHops) && trustedProxyHops >= 0
+      ? trustedProxyHops
+      : 0,
+  );
+  expressApp.disable('x-powered-by');
+  expressApp.enable('strict routing');
+
+  //Apply global exception filter
+
+  /*
+   * CORS SETUP
+   */
+  const allowedOrigins =
+    configService.get<string>('CORS_ORIGINS')?.split(',') || [];
+  app.enableCors({
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Cache-Control',
+      'Pragma',
+    ],
+    credentials: true,
+  });
+
+  // ----- Middlewares -----
+  app.use(cookieParser());
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+  const swaggerEnabled =
+    configService.get<string>('SWAGGER_ENABLED', 'true') === 'true';
+  if (swaggerEnabled) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('NestJS Authentication Service')
+      .setDescription('Authentication and session management API')
+      .setVersion('1.0')
+      .addBearerAuth(
+        { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+        'bearer',
+      )
+      .addApiKey({ type: 'apiKey', name: 'x-app-id', in: 'header' }, 'app-id')
+      .build();
+    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('docs', app, swaggerDocument);
+    console.log('Swagger UI available at /docs');
+  }
+
+  const port = Number(configService.getOrThrow('PORT'));
+  await app.listen(port);
+  const nodeEnv = configService.getOrThrow<string>('NODE_ENV');
+
+  if (nodeEnv === 'development') {
+    console.log(`AUTH SERVICES IS RUNNING: ${port}`);
+    console.log(`MODE:${nodeEnv}`);
+  } else if (nodeEnv === 'production') {
+    console.log(`AUTH SERVICES IS RUNNING: ${port}`);
+    console.log(`MODE:${nodeEnv}`);
+  } else if (nodeEnv === 'maintenance') {
+    console.log(`AUTH SERVICES IS RUNNING: ${port}`);
+    console.log(`MODE:${nodeEnv}`);
+    console.log(
+      'The system is currently under maintenance. Please try again later.',
+    );
+  } else {
+    console.log(`AUTH SERVICES IS RUNNING ON PORT: ${port}`);
+  }
+  console.log(`go to http://localhost:${port} for checking the endpoint`);
+  console.log(`go to http://localhost:${port}/docs for web api client`);
 }
 bootstrap();
